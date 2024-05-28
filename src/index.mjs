@@ -4,6 +4,9 @@ import cookieParser from "cookie-parser";
 import session from "express-session";
 import { mockUsers } from "./utilis/constants.mjs";
 
+import passport from "passport";
+import "./strategies/local-strategy.mjs";
+
 const app = express();
 
 app.use(express.json());
@@ -18,6 +21,9 @@ app.use(
     },
   })
 );
+
+app.use(passport.initialize());
+app.use(passport.session());
 
 app.use(routes);
 
@@ -35,23 +41,27 @@ app.get("/", (request, response) => {
   response.status(201).send({ msg: "Hello, Denny!" });
 });
 
-app.post("/api/auth", (request, response) => {
-  const {
-    body: { username, password },
-  } = request;
-
-  const findUser = mockUsers.find((user) => user.username === username);
-
-  if (!findUser || findUser.password !== password)
-    return response.status(401).send({ msg: "Bad Credential!" });
-
-  request.session.user = findUser;
-
-  return response.status(200).send(findUser);
+app.post("/api/auth", passport.authenticate("local"), (request, response) => {
+  response.sendStatus(200);
 });
 
+// app.post("/api/auth", (request, response) => {
+//   const {
+//     body: { username, password },
+//   } = request;
+
+//   const findUser = mockUsers.find((user) => user.username === username);
+
+//   if (!findUser || findUser.password !== password)
+//     return response.status(401).send({ msg: "Bad Credential!" });
+
+//   request.session.user = findUser;
+
+//   return response.status(200).send(findUser);
+// });
+
 app.get("/api/auth/status", (request, response) => {
-  return request.session.user
-    ? response.status(200).send(request.session.user)
-    : response.status(401).send({ msg: "Not Authenticated!" });
+  console.log(`Inside /auth/status endpoint`);
+  console.log(request.user);
+  return request.user ? response.send(request.user) : response.sendStatus(401);
 });
