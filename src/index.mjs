@@ -37,7 +37,7 @@ app.get("/", (request, response) => {
   console.log(request.session);
   console.log(request.session.id);
   request.session.visited = true;
-  response.cookie("hello", "world", { maxAge: 30000, signed: true }); // 60000 = 60 seconds. 2 hours
+  response.cookie("hello", "world", { maxAge: 60000 * 60, signed: true }); // 60000 = 60 seconds. 2 hours
   response.status(201).send({ msg: "Hello, Denny!" });
 });
 
@@ -45,23 +45,16 @@ app.post("/api/auth", passport.authenticate("local"), (request, response) => {
   response.sendStatus(200);
 });
 
-// app.post("/api/auth", (request, response) => {
-//   const {
-//     body: { username, password },
-//   } = request;
-
-//   const findUser = mockUsers.find((user) => user.username === username);
-
-//   if (!findUser || findUser.password !== password)
-//     return response.status(401).send({ msg: "Bad Credential!" });
-
-//   request.session.user = findUser;
-
-//   return response.status(200).send(findUser);
-// });
-
 app.get("/api/auth/status", (request, response) => {
   console.log(`Inside /auth/status endpoint`);
   console.log(request.user);
   return request.user ? response.send(request.user) : response.sendStatus(401);
+});
+
+app.post("/api/auth/logout", (request, response) => {
+  if (!request.user) return response.sendStatus(401);
+  request.logout((err) => {
+    if (err) return response.sendStatus(400);
+    response.send(200);
+  });
 });
