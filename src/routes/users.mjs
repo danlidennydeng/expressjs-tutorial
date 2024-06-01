@@ -9,6 +9,8 @@ import {
 import { mockUsers } from "../utilis/constants.mjs";
 import { createUserValidationSchema } from "../utilis/validationSchema.mjs";
 import { resolveIndexByUserId } from "../utilis/middlewares.mjs";
+import { User } from "../mongoose/schemas/user.mjs";
+import { hashPassword } from "../utilis/helpers.mjs";
 
 const router = Router();
 
@@ -52,22 +54,22 @@ router.get("/api/users/:id", (request, response) => {
   return response.send(findUser);
 });
 
-router.post(
-  "/api/users",
-  checkSchema(createUserValidationSchema),
-  (request, response) => {
-    const result = validationResult(request);
-    console.log(result);
+// router.post(
+//   "/api/users",
+//   checkSchema(createUserValidationSchema),
+//   (request, response) => {
+//     const result = validationResult(request);
+//     console.log(result);
 
-    if (!result.isEmpty())
-      return response.status(400).send({ errors: result.array() });
-    const data = matchedData(request);
+//     if (!result.isEmpty())
+//       return response.status(400).send({ errors: result.array() });
+//     const data = matchedData(request);
 
-    const newUser = { id: mockUsers[mockUsers.length - 1].id + 1, ...data };
-    mockUsers.push(newUser);
-    return response.status(201).send(newUser);
-  }
-);
+//     const newUser = { id: mockUsers[mockUsers.length - 1].id + 1, ...data };
+//     mockUsers.push(newUser);
+//     return response.status(201).send(newUser);
+//   }
+// );
 
 router.put("/api/users/:id", resolveIndexByUserId, (request, response) => {
   const { body, findUserIndex } = request;
@@ -76,6 +78,28 @@ router.put("/api/users/:id", resolveIndexByUserId, (request, response) => {
 
   return response.sendStatus(200);
 });
+
+router.post(
+  "/api/users",
+  checkSchema(createUserValidationSchema),
+  async (request, response) => {
+    const result = validationResult(request);
+    if (!result.isEmpty()) return response.status(400).send(result.array());
+
+    const data = matchedData(request);
+    console.log(data);
+    data.password = hashPassword(data.password);
+    console.log(data);
+    const newUser = new User(data);
+    try {
+      const savedUser = await newUser.save();
+      return response.status(201).send(savedUser);
+    } catch (err) {
+      console.log(err);
+      return response.sendStatus(400);
+    }
+  }
+);
 
 router.patch("/api/users/:id", (request, response) => {
   const {

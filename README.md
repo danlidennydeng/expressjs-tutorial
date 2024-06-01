@@ -11,6 +11,13 @@ install thunder client in VS Code. It works just like Postman.
 PATCH #change some fields of the record in database
 PUT #replace all fields of the record in database
 
+npm i express
 npm i express-validator
 
 npm i express-session
+npm i cookie-parser
+npm i mongoose
+
+npm i bcrypt
+
+(npm i npm-check-updates)
