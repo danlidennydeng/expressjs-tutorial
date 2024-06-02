@@ -21,3 +21,5 @@ npm i mongoose
 npm i bcrypt
 
 (npm i npm-check-updates)
+
+npm i connect-mongo
